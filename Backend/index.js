@@ -42,6 +42,7 @@ const productSchema = new mongoose.Schema({
   name: String,
   price: Number,
   image: String,
+  description: String,
   createdAt: { type: Date, default: Date.now }
 });
 
@@ -103,8 +104,8 @@ app.get('/products', async (req, res) => {
 // Tambah Produk
 app.post('/product', async (req, res) => {
   try {
-    const { name, price, image } = req.body;
-    const product = new Product({ name, price, image });
+    const { name, price, image, description } = req.body;
+    const product = new Product({ name, price, image, description });
     await product.save();
     res.status(201).json({ message: 'Produk berhasil ditambahkan.' });
   } catch (err) {
@@ -115,10 +116,10 @@ app.post('/product', async (req, res) => {
 // Update Produk
 app.patch('/product/:id', async (req, res) => {
   try {
-    const { name, price, image } = req.body;
+    const { name, price, image, description } = req.body;
     const product = await Product.findByIdAndUpdate(
       req.params.id,
-      { name, price, image },
+      { name, price, image, description },
       { new: true }
     );
     res.json({ message: 'Produk diperbarui.', product });
