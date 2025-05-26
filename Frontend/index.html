@@ -1,4 +1,6 @@
-<!DOCTYPE html><html lang="id"><head>
+<!DOCTYPE html>
+<html lang="id">
+<head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Auraskin Naturals - Skincare Alami untuk Kulit Sehat</title>
@@ -15,6 +17,7 @@
 <body class="text-[#1e2e4e] bg-[#fff6f8]">
   <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
   <script src="assets/js/main.js"></script>
+
   <header class="bg-[#fce4ec] px-6 py-4 flex flex-col md:flex-row justify-between items-center shadow-md">
     <div class="flex items-center space-x-4 mb-2 md:mb-0">
       <img src="assets/img/auraskin_logo.png" alt="Logo Auraskin" class="h-8 md:h-10">
@@ -27,11 +30,13 @@
       <a href="#kontak" class="text-[#d94b73] hover:text-[#b83c5e] transition">Kontak</a>
     </nav>
   </header>
-  <section class="text-center text-[#d94b73] py-24 px-4 bg-[#fff6f8]" data-aos="fade-up">
+
+  <section class="hero-bg min-h-[400px] text-center text-[#d94b73] py-24 px-4" data-aos="fade-up">
     <h2 class="text-4xl md:text-5xl font-bold mb-4 drop-shadow-lg">Kulit Sehat, Cantik Alami</h2>
     <p class="text-lg mb-6 drop-shadow-sm">Perawatan alami yang memancarkan kecantikan dari dalam.</p>
     <a href="order.html" class="bg-[#d94b73] text-white px-6 py-3 rounded-full shadow-md hover:bg-[#b83c5e] hover:scale-105 transition transform duration-300">Pesan Sekarang</a>
   </section>
+
   <section id="about" class="py-16 px-6 bg-[#fff0f5]" data-aos="fade-right">
     <div class="max-w-4xl mx-auto text-center">
       <h3 class="text-2xl md:text-3xl font-semibold mb-2">Tentang Auraskin</h3>
@@ -39,6 +44,7 @@
       <p class="text-[#3d3d3d] leading-relaxed">Auraskin adalah produk skincare yang dirancang khusus untuk memberikan perawatan alami dan aman bagi kulitmu. Kami menggunakan bahan-bahan alami yang telah terbukti membantu menjaga kelembaban, mencerahkan, dan menenangkan kulit sensitif tanpa efek samping.</p>
     </div>
   </section>
+
   <section id="produk" class="py-16 px-6 bg-[#fff6f8]" data-aos="fade-up">
     <div class="max-w-6xl mx-auto">
       <h3 class="text-2xl md:text-3xl font-semibold text-center mb-2">Produk Unggulan</h3>
@@ -46,6 +52,7 @@
       <div id="produkEtalase" class="grid md:grid-cols-3 gap-8"></div>
     </div>
   </section>
+
   <section class="py-16 px-6 bg-[#fff0f5]" data-aos="fade-left">
     <div class="max-w-4xl mx-auto text-center">
       <h3 class="text-2xl md:text-3xl font-semibold mb-2">Testimoni</h3>
@@ -59,6 +66,7 @@
       </div>
     </div>
   </section>
+
   <footer id="kontak" class="bg-[#fce4ec] text-[#d94b73] py-8 px-6 text-center">
     <h4 class="text-xl font-semibold mb-2">Hubungi Kami</h4>
     <p>WhatsApp: 0812-3456-7890 | Instagram: @auraskin.id</p>
@@ -71,25 +79,34 @@
       <a href="login.html" class="underline hover:text-[#d94b73]">Login Admin</a>
     </p>
   </footer>
+
   <script>
+    const BASE_URL = 'https://auraskinbackend-production.up.railway.app';
+
     async function tampilkanProduk() {
-      const res = await fetch('http://localhost:5000/products');
-      const products = await res.json();
-      const container = document.getElementById('produkEtalase');
-      products.forEach(p => {
-        const el = document.createElement('div');
-        el.className = 'rounded-2xl shadow-lg p-6 text-center bg-white hover:shadow-xl transition';
-        el.innerHTML = `
-          <img src="${p.image}" alt="${p.name}" class="mx-auto mb-4 rounded-xl">
-          <h4 class="text-lg font-bold">${p.name}</h4>
-          <p class="text-gray-600">Produk skincare premium</p>
-          <p class="text-[#d94b73] font-semibold mt-2">Rp${p.price.toLocaleString()}</p>
-          <a href="order.html" class="mt-4 inline-block bg-[#d94b73] text-white px-4 py-2 rounded-full hover:bg-[#b83c5e] hover:scale-105 transition">Pesan</a>
-        `;
-        container.appendChild(el);
-      });
+      try {
+        const res = await fetch(`${BASE_URL}/products`);
+        const products = await res.json();
+        const container = document.getElementById('produkEtalase');
+        container.innerHTML = '';
+        products.forEach(p => {
+          const el = document.createElement('div');
+          el.className = 'rounded-2xl shadow-lg p-6 text-center bg-white hover:shadow-xl transition';
+          el.innerHTML = `
+            <img src="${p.image}" alt="${p.name}" class="mx-auto mb-4 rounded-xl">
+            <h4 class="text-lg font-bold">${p.name}</h4>
+            <p class="text-gray-600">Produk skincare premium</p>
+            <p class="text-[#d94b73] font-semibold mt-2">Rp${p.price.toLocaleString()}</p>
+            <a href="order.html" class="mt-4 inline-block bg-[#d94b73] text-white px-4 py-2 rounded-full hover:bg-[#b83c5e] hover:scale-105 transition">Pesan</a>
+          `;
+          container.appendChild(el);
+        });
+      } catch (err) {
+        console.error('Gagal menampilkan produk:', err);
+      }
     }
-    tampilkanProduk();
+
+    document.addEventListener('DOMContentLoaded', tampilkanProduk);
   </script>
 </body>
 </html>

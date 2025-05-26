@@ -75,13 +75,14 @@
   <audio id="notifSound" src="https://cdn.pixabay.com/download/audio/2023/02/27/audio_f56d1fc7a6.mp3?filename=cafe-bell-136489.mp3"></audio>
 
   <script>
+    const BASE_URL = 'https://auraskinbackend-production.up.railway.app';
     let productMap = new Map();
     let allOrders = [];
     let lastCount = 0;
 
     async function fetchProductPrices() {
       try {
-        const res = await fetch('http://localhost:5000/products');
+        const res = await fetch(`${BASE_URL}/products`);
         const products = await res.json();
         productMap.clear();
         products.forEach(p => {
@@ -104,7 +105,7 @@
 
     async function fetchOrders() {
       try {
-        const res = await fetch('http://localhost:5000/orders');
+        const res = await fetch(`${BASE_URL}/orders`);
         const orders = await res.json();
 
         orders.forEach(o => {
@@ -179,7 +180,7 @@
 
     async function toggleStatus(id) {
       try {
-        const res = await fetch(`http://localhost:5000/order/${id}`, {
+        const res = await fetch(`${BASE_URL}/order/${id}`, {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json' }
         });

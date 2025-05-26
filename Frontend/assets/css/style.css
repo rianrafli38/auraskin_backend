@@ -13,7 +13,7 @@ body {
     border-radius: 999px;
   }
   .hero-bg {
-    background-image: url('../img/Hero_Background.jpg');
+    background-image: url('../img/hero-new.jpg?v=2');
     background-size: cover;
     background-position: center;
   }

@@ -10,27 +10,36 @@
     <div class="flex justify-between items-center mb-6">
       <h1 class="text-2xl font-bold">Manajemen Produk - Auraskin</h1>
       <a href="admin.html" class="text-blue-500 underline">Kembali ke Dashboard</a>
-    </div><form id="productForm" class="bg-white p-6 rounded shadow mb-6">
-  <h2 class="text-lg font-semibold mb-4">Tambah / Edit Produk</h2>
-  <div class="mb-4">
-    <label class="block mb-1 font-medium">Nama Produk</label>
-    <input type="text" id="productName" class="w-full border px-3 py-2 rounded" required />
-  </div>
-  <div class="mb-4">
-    <label class="block mb-1 font-medium">Harga (Rp)</label>
-    <input type="number" id="productPrice" class="w-full border px-3 py-2 rounded" required />
-  </div>
-  <div class="mb-4">
-    <label class="block mb-1 font-medium">URL Gambar Produk</label>
-    <input type="text" id="productImage" class="w-full border px-3 py-2 rounded" />
-  </div>
-  <input type="hidden" id="editId" />
-  <button type="submit" class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">Simpan Produk</button>
-</form>
+    </div>
 
-<div id="productList" class="space-y-4"></div>
+    <form id="productForm" class="bg-white p-6 rounded shadow mb-6">
+      <h2 class="text-lg font-semibold mb-4">Tambah / Edit Produk</h2>
+      <div class="mb-4">
+        <label class="block mb-1 font-medium">Nama Produk</label>
+        <input type="text" id="productName" class="w-full border px-3 py-2 rounded" required />
+      </div>
+      <div class="mb-4">
+        <label class="block mb-1 font-medium">Harga (Rp)</label>
+        <input type="number" id="productPrice" class="w-full border px-3 py-2 rounded" required />
+      </div>
+      <div class="mb-4">
+        <label class="block mb-1 font-medium">URL Gambar Produk</label>
+        <input type="text" id="productImage" class="w-full border px-3 py-2 rounded" />
+      </div>
+      <div class="mb-4">
+         <label class="block mb-1 font-medium">Deskripsi Produk</label>
+         <textarea id="productDesc" class="w-full border px-3 py-2 rounded"></textarea>
+      </div>
+      <input type="hidden" id="editId" />
+      <button type="submit" class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">Simpan Produk</button>
+    </form>
 
-  </div>  <script>
+    <div id="productList" class="space-y-4"></div>
+  </div>
+
+  <script>
+    const BASE_URL = 'https://auraskinbackend-production.up.railway.app';
+
     const form = document.getElementById('productForm');
     const list = document.getElementById('productList');
 
@@ -39,11 +48,12 @@
       const name = document.getElementById('productName').value;
       const price = parseInt(document.getElementById('productPrice').value);
       const image = document.getElementById('productImage').value;
+      const description = document.getElementById('productDesc').value;
       const id = document.getElementById('editId').value;
 
-      const body = JSON.stringify({ name, price, image });
+      const body = JSON.stringify({ name, price, image, description });
       const method = id ? 'PATCH' : 'POST';
-      const url = id ? `http://localhost:5000/product/${id}` : 'http://localhost:5000/product';
+      const url = id ? `${BASE_URL}/product/${id}` : `${BASE_URL}/product`;
 
       await fetch(url, {
         method,
@@ -56,7 +66,7 @@
     });
 
     async function fetchProducts() {
-      const res = await fetch('http://localhost:5000/products');
+      const res = await fetch(`${BASE_URL}/products`);
       const products = await res.json();
       list.innerHTML = '';
       products.forEach(p => {
@@ -76,18 +86,20 @@
       });
     }
 
-    function editProduct(id, name, price, image) {
+    function editProduct(id, name, price, image, description) {
       document.getElementById('productName').value = name;
       document.getElementById('productPrice').value = price;
       document.getElementById('productImage').value = image;
+      document.getElementById('productDesc').value = description;
       document.getElementById('editId').value = id;
     }
 
     async function deleteProduct(id) {
-      await fetch(`http://localhost:5000/product/${id}`, { method: 'DELETE' });
+      await fetch(`${BASE_URL}/product/${id}`, { method: 'DELETE' });
       fetchProducts();
     }
 
     fetchProducts();
-  </script></body>
+  </script>
+</body>
 </html>
