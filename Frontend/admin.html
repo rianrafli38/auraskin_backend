@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dashboard Pesanan - Auraskin</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    #toast {
+      opacity: 0;
+      transform: translateY(-20px);
+      transition: opacity 0.4s ease, transform 0.4s ease;
+    }
+    #toast.show {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  </style>
+</head>
+<body class="bg-gray-100 text-[#1e2e4e]">
+  <div class="max-w-5xl mx-auto py-10 px-4">
+    <div class="flex justify-between items-center mb-6">
+      <h1 class="text-3xl font-bold">Dashboard Pesanan - Auraskin</h1>
+      <div class="relative">
+        <button id="logoutBtn" class="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600">Logout</button>
+        <span id="notifBadge" class="absolute -top-2 -right-2 bg-green-500 text-white text-xs px-2 py-0.5 rounded-full hidden">New</span>
+      </div>
+    </div>
+
+    <div class="mb-6">
+      <a href="admin_product_management.html" class="text-blue-500 underline hover:text-blue-700">Kelola Produk</a>
+    </div>
+
+    <div class="mb-6 grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div class="bg-white p-4 rounded shadow text-center">
+        <h2 class="text-lg font-semibold">Total Omzet</h2>
+        <p id="totalRevenue" class="text-2xl font-bold text-green-600">Rp0</p>
+      </div>
+      <div class="bg-white p-4 rounded shadow text-center">
+        <h2 class="text-lg font-semibold">Jumlah Pesanan</h2>
+        <p id="totalOrders" class="text-2xl font-bold text-blue-600">0</p>
+      </div>
+    </div>
+
+    <div class="flex flex-wrap gap-4 mb-6">
+      <div>
+        <label for="filterProduct" class="block mb-1 text-sm font-medium">Filter Produk</label>
+        <select id="filterProduct" class="border px-3 py-2 rounded">
+          <option value="">Semua Produk</option>
+        </select>
+      </div>
+      <div>
+        <label for="filterDate" class="block mb-1 text-sm font-medium">Filter Tanggal</label>
+        <input type="date" id="filterDate" class="border px-3 py-2 rounded" />
+      </div>
+      <div>
+        <label for="filterStatus" class="block mb-1 text-sm font-medium">Status Pesanan</label>
+        <select id="filterStatus" class="border px-3 py-2 rounded">
+          <option value="">Semua</option>
+          <option value="false">Belum Selesai</option>
+          <option value="true">Selesai</option>
+        </select>
+      </div>
+      <button id="resetFilter" class="bg-gray-300 text-[#1e2e4e] px-4 py-2 mt-6 rounded hover:bg-gray-400">Reset</button>
+    </div>
+
+    <div id="toast" class="fixed top-5 right-5 bg-green-500 text-white px-4 py-2 rounded shadow-lg opacity-0">Pesanan baru masuk!</div>
+    <div id="orderList" class="space-y-4"></div>
+  </div>
+
+  <footer class="text-center text-sm text-gray-500 mt-12">
+    <a href="login.html" class="underline hover:text-[#d94b73]">Login Admin</a>
+  </footer>
+
+  <audio id="notifSound" src="https://cdn.pixabay.com/download/audio/2023/02/27/audio_f56d1fc7a6.mp3?filename=cafe-bell-136489.mp3"></audio>
+
+  <script>
+    let productMap = new Map();
+    let allOrders = [];
+    let lastCount = 0;
+
+    async function fetchProductPrices() {
+      try {
+        const res = await fetch('http://localhost:5000/products');
+        const products = await res.json();
+        productMap.clear();
+        products.forEach(p => {
+          productMap.set(p.name, p.price);
+        });
+      } catch (err) {
+        console.error('Gagal mengambil produk:', err);
+      }
+    }
+
+    function updateSummary(orders) {
+      let total = 0;
+      orders.forEach(order => {
+        const price = productMap.get(order.product) || 0;
+        total += price * order.quantity;
+      });
+      document.getElementById('totalRevenue').textContent = 'Rp' + total.toLocaleString();
+      document.getElementById('totalOrders').textContent = orders.length;
+    }
+
+    async function fetchOrders() {
+      try {
+        const res = await fetch('http://localhost:5000/orders');
+        const orders = await res.json();
+
+        orders.forEach(o => {
+          if (o.isCompleted === undefined) o.isCompleted = false;
+        });
+
+        if (orders.length > lastCount && lastCount !== 0) {
+          showToast('Pesanan baru masuk!');
+          document.getElementById('notifSound').play();
+          document.getElementById('notifBadge').classList.remove('hidden');
+        }
+
+        lastCount = orders.length;
+        allOrders = orders;
+        populateProductFilter(orders);
+        renderOrders(orders);
+        updateSummary(orders);
+      } catch (err) {
+        console.error('Gagal mengambil pesanan:', err);
+        document.getElementById('orderList').innerHTML = '<p class="text-red-500 text-center">Gagal memuat data pesanan.</p>';
+      }
+    }
+
+    function showToast(message) {
+      const toast = document.getElementById('toast');
+      toast.textContent = message;
+      toast.classList.add('show');
+      setTimeout(() => toast.classList.remove('show'), 4000);
+    }
+
+    function populateProductFilter(orders) {
+      const productSet = new Set();
+      orders.forEach(o => productSet.add(o.product));
+      const filter = document.getElementById('filterProduct');
+      filter.innerHTML = '<option value="">Semua Produk</option>';
+      productSet.forEach(product => {
+        const option = document.createElement('option');
+        option.value = product;
+        option.textContent = product;
+        filter.appendChild(option);
+      });
+    }
+
+    function renderOrders(orders) {
+      const container = document.getElementById('orderList');
+      container.innerHTML = '';
+
+      if (orders.length === 0) {
+        container.innerHTML = '<p class="text-center text-gray-500">Tidak ada pesanan ditemukan.</p>';
+        return;
+      }
+
+      orders.forEach(order => {
+        const price = productMap.get(order.product) || 0;
+        const card = document.createElement('div');
+        card.className = 'bg-white p-4 rounded-lg shadow-md';
+        card.innerHTML = `
+          <p><strong>Nama:</strong> ${order.name}</p>
+          <p><strong>No. WhatsApp:</strong> ${order.phone}</p>
+          <p><strong>Alamat:</strong> ${order.address}</p>
+          <p><strong>Produk:</strong> ${order.product}</p>
+          <p><strong>Jumlah:</strong> ${order.quantity}</p>
+          <p><strong>Total:</strong> Rp${(price * order.quantity).toLocaleString()}</p>
+          <p><strong>Catatan:</strong> ${order.notes || '-'}</p>
+          <p><strong>Status:</strong> <span class="font-semibold text-${order.isCompleted ? 'green' : 'red'}-600">${order.isCompleted ? 'Selesai' : 'Belum'}</span></p>
+          <p class="text-sm text-gray-500 mt-2">${new Date(order.createdAt).toLocaleString()}</p>
+          <button onclick="toggleStatus('${order._id}')" class="mt-2 px-3 py-1 bg-${order.isCompleted ? 'gray' : 'green'}-500 text-white rounded hover:bg-${order.isCompleted ? 'gray' : 'green'}-600">Tandai ${order.isCompleted ? 'Belum Selesai' : 'Selesai'}</button>
+        `;
+        container.appendChild(card);
+      });
+    }
+
+    async function toggleStatus(id) {
+      try {
+        const res = await fetch(`http://localhost:5000/order/${id}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' }
+        });
+        if (!res.ok) {
+          const result = await res.json();
+          alert(result.error || 'Gagal update status');
+        }
+        await fetchProductPrices();
+        await fetchOrders();
+      } catch (err) {
+        console.error('Error toggle status:', err);
+      }
+    }
+
+    function applyFilters() {
+      const selectedProduct = document.getElementById('filterProduct').value;
+      const selectedDate = document.getElementById('filterDate').value;
+      const selectedStatus = document.getElementById('filterStatus').value;
+
+      const filtered = allOrders.filter(order => {
+        const matchProduct = selectedProduct ? order.product === selectedProduct : true;
+        const matchDate = selectedDate ? new Date(order.createdAt).toISOString().slice(0, 10) === selectedDate : true;
+        const matchStatus = selectedStatus !== '' ? String(order.isCompleted) === selectedStatus : true;
+        return matchProduct && matchDate && matchStatus;
+      });
+
+      renderOrders(filtered);
+      updateSummary(filtered);
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      if (sessionStorage.getItem('isAdmin') !== 'true') {
+        window.location.href = 'login.html';
+        return;
+      }
+
+      document.getElementById('logoutBtn').addEventListener('click', () => {
+        sessionStorage.removeItem('isAdmin');
+        window.location.href = 'login.html';
+      });
+
+      document.getElementById('filterProduct').addEventListener('change', applyFilters);
+      document.getElementById('filterDate').addEventListener('change', applyFilters);
+      document.getElementById('filterStatus').addEventListener('change', applyFilters);
+      document.getElementById('resetFilter').addEventListener('click', () => {
+        document.getElementById('filterProduct').value = '';
+        document.getElementById('filterDate').value = '';
+        document.getElementById('filterStatus').value = '';
+        renderOrders(allOrders);
+        updateSummary(allOrders);
+        document.getElementById('notifBadge').classList.add('hidden');
+      });
+
+      fetchProductPrices().then(fetchOrders);
+      setInterval(() => {
+        fetchProductPrices().then(fetchOrders);
+      }, 30000);
+    });
+  </script>
+</body>
+</html>

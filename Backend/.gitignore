@@ -1,0 +1,16 @@
+# Node modules
+node_modules/
+
+# Env file
+.env
+
+# Log files
+*.log
+
+# IDE files
+.vscode/
+.DS_Store
+
+# Output builds (optional kalau pakai)
+dist/
+build/

@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Form Pemesanan - Auraskin</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-[#fff6f8] text-[#1e2e4e]">
+
+  <div class="max-w-lg mx-auto mt-16 p-6 bg-white shadow-lg rounded-lg">
+    <h2 class="text-2xl font-bold mb-4 text-center">Form Pemesanan Auraskin</h2>
+    <form id="orderForm" class="space-y-4">
+      <div>
+        <label class="block mb-1 font-medium">Nama Lengkap</label>
+        <input type="text" id="name" class="w-full border rounded px-3 py-2" required>
+      </div>
+      <div>
+        <label class="block mb-1 font-medium">Nomor WhatsApp</label>
+        <input type="tel" id="phone" class="w-full border rounded px-3 py-2" required>
+      </div>
+      <div>
+        <label class="block mb-1 font-medium">Alamat Pengiriman</label>
+        <textarea id="address" class="w-full border rounded px-3 py-2" required></textarea>
+     </div>
+      <div>
+        <label class="block mb-1 font-medium">Pilih Produk</label>
+        <select id="product" class="w-full border rounded px-3 py-2">
+          <!-- Opsi produk akan dimuat otomatis -->
+        </select>
+      </div>
+      <div>
+        <label class="block mb-1 font-medium">Jumlah</label>
+        <input type="number" id="quantity" class="w-full border rounded px-3 py-2" min="1" value="1">
+      </div>
+      <div>
+        <label class="block mb-1 font-medium">Catatan (Opsional)</label>
+        <textarea id="notes" class="w-full border rounded px-3 py-2"></textarea>
+      </div>
+      <button type="submit" class="w-full bg-[#d94b73] text-white py-2 rounded hover:bg-[#b83c5e] transition">Kirim Pesanan</button>
+    </form>
+    <p id="successMsg" class="mt-4 text-green-600 text-center hidden">Pesanan berhasil dikirim!</p>
+  </div>
+
+  <script>
+    // Ambil daftar produk dari backend
+    async function loadProducts() {
+      try {
+        const res = await fetch('http://localhost:5000/products');
+        const products = await res.json();
+        const select = document.getElementById('product');
+        products.forEach(p => {
+          const option = document.createElement('option');
+          option.value = p.name;
+          option.textContent = `${p.name} - Rp${p.price.toLocaleString()}`;
+          select.appendChild(option);
+        });
+      } catch (err) {
+        console.error('Gagal memuat produk:', err);
+      }
+    }
+
+    loadProducts();
+
+    // Kirim pesanan
+    const form = document.getElementById('orderForm');
+    const successMsg = document.getElementById('successMsg');
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const data = {
+        name: document.getElementById('name').value,
+        phone: document.getElementById('phone').value,
+        address: document.getElementById('address').value,
+        product: document.getElementById('product').value,
+        quantity: document.getElementById('quantity').value,
+        notes: document.getElementById('notes').value
+      };
+
+      const response = await fetch('http://localhost:5000/order', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      });
+
+      if (response.ok) {
+        form.reset();
+        successMsg.classList.remove('hidden');
+      } else {
+        alert('Gagal mengirim pesanan. Coba lagi.');
+      }
+    });
+  </script>
+</body>
+</html>
