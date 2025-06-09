@@ -32,6 +32,7 @@ const orderSchema = new mongoose.Schema({
   product: String,
   quantity: Number,
   notes: String,
+  total: Number, 
   isCompleted: { type: Boolean, default: false },
   createdAt: { type: Date, default: Date.now }
 });
