@@ -32,7 +32,7 @@ const orderSchema = new mongoose.Schema({
   product: String,
   quantity: Number,
   notes: String,
-  total: Number, 
+  total: Number,
   isCompleted: { type: Boolean, default: false },
   createdAt: { type: Date, default: Date.now }
 });
@@ -56,8 +56,8 @@ const Product = mongoose.model('Product', productSchema);
 // Buat Pesanan Baru
 app.post('/order', async (req, res) => {
   try {
-    const { name, phone, address, product, quantity, notes } = req.body;
-    const newOrder = new Order({ name, phone, address, product, quantity, notes });
+    const { name, phone, address, product, quantity, notes, total } = req.body; // ✅ tambahkan total
+    const newOrder = new Order({ name, phone, address, product, quantity, notes, total }); // ✅ masukkan ke Order
     await newOrder.save();
     res.status(201).json({ message: 'Pesanan berhasil disimpan.' });
   } catch (err) {
