@@ -29,7 +29,13 @@ const orderSchema = new mongoose.Schema({
   name: String,
   phone: String,
   address: String,
-  product: String,
+  items: [
+    {
+      name: String,
+      qty: Number,
+      price: Number
+    }
+  ],
   quantity: Number,
   notes: String,
   total: Number,
@@ -56,8 +62,8 @@ const Product = mongoose.model('Product', productSchema);
 // Buat Pesanan Baru
 app.post('/order', async (req, res) => {
   try {
-    const { name, phone, address, product, quantity, notes, total } = req.body; // ✅ tambahkan total
-    const newOrder = new Order({ name, phone, address, product, quantity, notes, total }); // ✅ masukkan ke Order
+    const { name, phone, address, items, quantity, notes, total } = req.body;
+    const newOrder = new Order({ name, phone, address, items, quantity, notes, total });
     await newOrder.save();
     res.status(201).json({ message: 'Pesanan berhasil disimpan.' });
   } catch (err) {
