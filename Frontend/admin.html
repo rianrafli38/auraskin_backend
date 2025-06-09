@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="id">
 <head>
@@ -27,10 +28,6 @@
       </div>
     </div>
 
-    <div class="mb-6">
-      <a href="admin_product_management.html" class="text-blue-500 underline hover:text-blue-700">Kelola Produk</a>
-    </div>
-
     <div class="mb-6 grid grid-cols-1 md:grid-cols-2 gap-4">
       <div class="bg-white p-4 rounded shadow text-center">
         <h2 class="text-lg font-semibold">Total Omzet</h2>
@@ -40,28 +37,6 @@
         <h2 class="text-lg font-semibold">Jumlah Pesanan</h2>
         <p id="totalOrders" class="text-2xl font-bold text-blue-600">0</p>
       </div>
-    </div>
-
-    <div class="flex flex-wrap gap-4 mb-6">
-      <div>
-        <label for="filterProduct" class="block mb-1 text-sm font-medium">Filter Produk</label>
-        <select id="filterProduct" class="border px-3 py-2 rounded">
-          <option value="">Semua Produk</option>
-        </select>
-      </div>
-      <div>
-        <label for="filterDate" class="block mb-1 text-sm font-medium">Filter Tanggal</label>
-        <input type="date" id="filterDate" class="border px-3 py-2 rounded" />
-      </div>
-      <div>
-        <label for="filterStatus" class="block mb-1 text-sm font-medium">Status Pesanan</label>
-        <select id="filterStatus" class="border px-3 py-2 rounded">
-          <option value="">Semua</option>
-          <option value="false">Belum Selesai</option>
-          <option value="true">Selesai</option>
-        </select>
-      </div>
-      <button id="resetFilter" class="bg-gray-300 text-[#1e2e4e] px-4 py-2 mt-6 rounded hover:bg-gray-400">Reset</button>
     </div>
 
     <div id="toast" class="fixed top-5 right-5 bg-green-500 text-white px-4 py-2 rounded shadow-lg opacity-0">Pesanan baru masuk!</div>
@@ -74,171 +49,126 @@
 
   <audio id="notifSound" src="https://cdn.pixabay.com/download/audio/2023/02/27/audio_f56d1fc7a6.mp3?filename=cafe-bell-136489.mp3"></audio>
 
-  <script>
-    const BASE_URL = 'https://auraskinbackend-production.up.railway.app';
-    let productMap = new Map();
-    let allOrders = [];
-    let lastCount = 0;
+  <!-- (head dan style tidak berubah) -->
+<script>
+const BASE_URL = 'https://auraskinbackend-production.up.railway.app';
+let allOrders = [];
+let lastCount = 0;
 
-    async function fetchProductPrices() {
-      try {
-        const res = await fetch(`${BASE_URL}/products`);
-        const products = await res.json();
-        productMap.clear();
-        products.forEach(p => {
-          productMap.set(p.name, p.price);
-        });
-      } catch (err) {
-        console.error('Gagal mengambil produk:', err);
-      }
-    }
-
-    function updateSummary(orders) {
-      let total = 0;
-      orders.forEach(order => {
-        const price = productMap.get(order.product) || 0;
-        total += price * order.quantity;
-      });
-      document.getElementById('totalRevenue').textContent = 'Rp' + total.toLocaleString();
-      document.getElementById('totalOrders').textContent = orders.length;
-    }
-
-    async function fetchOrders() {
-      try {
-        const res = await fetch(`${BASE_URL}/orders`);
-        const orders = await res.json();
-
-        orders.forEach(o => {
-          if (o.isCompleted === undefined) o.isCompleted = false;
-        });
-
-        if (orders.length > lastCount && lastCount !== 0) {
-          showToast('Pesanan baru masuk!');
-          document.getElementById('notifSound').play();
-          document.getElementById('notifBadge').classList.remove('hidden');
-        }
-
-        lastCount = orders.length;
-        allOrders = orders;
-        populateProductFilter(orders);
-        renderOrders(orders);
-        updateSummary(orders);
-      } catch (err) {
-        console.error('Gagal mengambil pesanan:', err);
-        document.getElementById('orderList').innerHTML = '<p class="text-red-500 text-center">Gagal memuat data pesanan.</p>';
-      }
-    }
-
-    function showToast(message) {
-      const toast = document.getElementById('toast');
-      toast.textContent = message;
-      toast.classList.add('show');
-      setTimeout(() => toast.classList.remove('show'), 4000);
-    }
-
-    function populateProductFilter(orders) {
-      const productSet = new Set();
-      orders.forEach(o => productSet.add(o.product));
-      const filter = document.getElementById('filterProduct');
-      filter.innerHTML = '<option value="">Semua Produk</option>';
-      productSet.forEach(product => {
-        const option = document.createElement('option');
-        option.value = product;
-        option.textContent = product;
-        filter.appendChild(option);
+function updateSummary(orders) {
+  let total = 0;
+  orders.forEach(order => {
+    if (Array.isArray(order.items)) {
+      order.items.forEach(item => {
+        total += (item.price || 0) * (item.qty || 0);
       });
     }
+  });
+  document.getElementById('totalRevenue').textContent = 'Rp' + total.toLocaleString();
+  document.getElementById('totalOrders').textContent = orders.length;
+}
 
-    function renderOrders(orders) {
-      const container = document.getElementById('orderList');
-      container.innerHTML = '';
+async function fetchOrders() {
+  try {
+    const res = await fetch(`${BASE_URL}/orders`);
+    const orders = await res.json();
 
-      if (orders.length === 0) {
-        container.innerHTML = '<p class="text-center text-gray-500">Tidak ada pesanan ditemukan.</p>';
-        return;
-      }
-
-      orders.forEach(order => {
-        const price = productMap.get(order.product) || 0;
-        const card = document.createElement('div');
-        card.className = 'bg-white p-4 rounded-lg shadow-md';
-        card.innerHTML = `
-          <p><strong>Nama:</strong> ${order.name}</p>
-          <p><strong>No. WhatsApp:</strong> ${order.phone}</p>
-          <p><strong>Alamat:</strong> ${order.address}</p>
-          <p><strong>Produk:</strong> ${order.product}</p>
-          <p><strong>Jumlah:</strong> ${order.quantity}</p>
-          <p><strong>Total:</strong> Rp${(price * order.quantity).toLocaleString()}</p>
-          <p><strong>Catatan:</strong> ${order.notes || '-'}</p>
-          <p><strong>Status:</strong> <span class="font-semibold text-${order.isCompleted ? 'green' : 'red'}-600">${order.isCompleted ? 'Selesai' : 'Belum'}</span></p>
-          <p class="text-sm text-gray-500 mt-2">${new Date(order.createdAt).toLocaleString()}</p>
-          <button onclick="toggleStatus('${order._id}')" class="mt-2 px-3 py-1 bg-${order.isCompleted ? 'gray' : 'green'}-500 text-white rounded hover:bg-${order.isCompleted ? 'gray' : 'green'}-600">Tandai ${order.isCompleted ? 'Belum Selesai' : 'Selesai'}</button>
-        `;
-        container.appendChild(card);
-      });
-    }
-
-    async function toggleStatus(id) {
-      try {
-        const res = await fetch(`${BASE_URL}/order/${id}`, {
-          method: 'PATCH',
-          headers: { 'Content-Type': 'application/json' }
-        });
-        if (!res.ok) {
-          const result = await res.json();
-          alert(result.error || 'Gagal update status');
-        }
-        await fetchProductPrices();
-        await fetchOrders();
-      } catch (err) {
-        console.error('Error toggle status:', err);
-      }
-    }
-
-    function applyFilters() {
-      const selectedProduct = document.getElementById('filterProduct').value;
-      const selectedDate = document.getElementById('filterDate').value;
-      const selectedStatus = document.getElementById('filterStatus').value;
-
-      const filtered = allOrders.filter(order => {
-        const matchProduct = selectedProduct ? order.product === selectedProduct : true;
-        const matchDate = selectedDate ? new Date(order.createdAt).toISOString().slice(0, 10) === selectedDate : true;
-        const matchStatus = selectedStatus !== '' ? String(order.isCompleted) === selectedStatus : true;
-        return matchProduct && matchDate && matchStatus;
-      });
-
-      renderOrders(filtered);
-      updateSummary(filtered);
-    }
-
-    document.addEventListener('DOMContentLoaded', () => {
-      if (sessionStorage.getItem('isAdmin') !== 'true') {
-        window.location.href = 'login.html';
-        return;
-      }
-
-      document.getElementById('logoutBtn').addEventListener('click', () => {
-        sessionStorage.removeItem('isAdmin');
-        window.location.href = 'login.html';
-      });
-
-      document.getElementById('filterProduct').addEventListener('change', applyFilters);
-      document.getElementById('filterDate').addEventListener('change', applyFilters);
-      document.getElementById('filterStatus').addEventListener('change', applyFilters);
-      document.getElementById('resetFilter').addEventListener('click', () => {
-        document.getElementById('filterProduct').value = '';
-        document.getElementById('filterDate').value = '';
-        document.getElementById('filterStatus').value = '';
-        renderOrders(allOrders);
-        updateSummary(allOrders);
-        document.getElementById('notifBadge').classList.add('hidden');
-      });
-
-      fetchProductPrices().then(fetchOrders);
-      setInterval(() => {
-        fetchProductPrices().then(fetchOrders);
-      }, 30000);
+    orders.forEach(o => {
+      if (o.isCompleted === undefined) o.isCompleted = false;
     });
-  </script>
+
+    if (orders.length > lastCount && lastCount !== 0) {
+      showToast('Pesanan baru masuk!');
+      document.getElementById('notifSound').play();
+      document.getElementById('notifBadge').classList.remove('hidden');
+    }
+
+    lastCount = orders.length;
+    allOrders = orders;
+    renderOrders(orders);
+    updateSummary(orders);
+  } catch (err) {
+    console.error('Gagal mengambil pesanan:', err);
+  }
+}
+
+function showToast(message) {
+  const toast = document.getElementById('toast');
+  toast.textContent = message;
+  toast.classList.add('show');
+  setTimeout(() => toast.classList.remove('show'), 4000);
+}
+
+function renderOrders(orders) {
+  const container = document.getElementById('orderList');
+  container.innerHTML = '';
+
+  if (orders.length === 0) {
+    container.innerHTML = '<p class="text-center text-gray-500">Tidak ada pesanan ditemukan.</p>';
+    return;
+  }
+
+  orders.forEach(order => {
+    let itemsHTML = '';
+    let orderTotal = 0;
+
+    if (Array.isArray(order.items)) {
+      order.items.forEach(item => {
+        const subtotal = (item.price || 0) * (item.qty || 0);
+        orderTotal += subtotal;
+        itemsHTML += `
+          <li class="ml-4">• ${item.name} x ${item.qty} @ Rp${item.price?.toLocaleString() || 0} = <strong>Rp${subtotal.toLocaleString()}</strong></li>
+        `;
+      });
+    }
+
+    const card = document.createElement('div');
+    card.className = 'bg-white p-4 rounded-lg shadow-md';
+    card.innerHTML = `
+      <p><strong>Nama:</strong> ${order.name}</p>
+      <p><strong>No. WhatsApp:</strong> ${order.phone}</p>
+      <p><strong>Alamat:</strong> ${order.address}</p>
+      <p><strong>Item:</strong></p>
+      <ul>${itemsHTML}</ul>
+      <p class="mt-1"><strong>Total:</strong> Rp${orderTotal.toLocaleString()}</p>
+      <p><strong>Status:</strong> <span class="font-semibold text-${order.isCompleted ? 'green' : 'red'}-600">${order.isCompleted ? 'Selesai' : 'Belum'}</span></p>
+      <p class="text-sm text-gray-500 mt-2">${new Date(order.createdAt).toLocaleString()}</p>
+      <button onclick="toggleStatus('${order._id}')" class="mt-2 px-3 py-1 bg-${order.isCompleted ? 'gray' : 'green'}-500 text-white rounded hover:bg-${order.isCompleted ? 'gray' : 'green'}-600">Tandai ${order.isCompleted ? 'Belum Selesai' : 'Selesai'}</button>
+    `;
+    container.appendChild(card);
+  });
+}
+
+async function toggleStatus(id) {
+  try {
+    const res = await fetch(`${BASE_URL}/order/${id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' }
+    });
+    if (!res.ok) {
+      const result = await res.json();
+      alert(result.error || 'Gagal update status');
+    }
+    await fetchOrders();
+  } catch (err) {
+    console.error('Error toggle status:', err);
+  }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  if (sessionStorage.getItem('isAdmin') !== 'true') {
+    window.location.href = 'login.html';
+    return;
+  }
+
+  document.getElementById('logoutBtn').addEventListener('click', () => {
+    sessionStorage.removeItem('isAdmin');
+    window.location.href = 'login.html';
+  });
+
+  fetchOrders();
+  setInterval(fetchOrders, 5000);
+});
+</script>
 </body>
 </html>

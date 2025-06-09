@@ -1,19 +1,65 @@
-body {
-    background-color: #f7f1e8;
-    font-family: 'Inter', sans-serif;
-  }
-  h2, h3, h4 {
-    font-family: 'Playfair Display', serif;
-  }
-  .divider {
-    width: 80px;
-    height: 4px;
-    background-color: #893f34;
-    margin: 16px auto;
-    border-radius: 999px;
-  }
+/* Global Reset */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html, body {
+  width: 100%;
+  overflow-x: hidden;
+  background-color: #f7f1e8;
+  font-family: 'Inter', sans-serif;
+}
+
+/* Headings */
+h2, h3, h4 {
+  font-family: 'Playfair Display', serif;
+}
+
+/* Divider */
+.divider {
+  width: 80px;
+  height: 4px;
+  background-color: #893f34;
+  margin: 16px auto;
+  border-radius: 999px;
+}
+
+/* Hero Section */
+.hero-bg {
+  position: relative;
+  background-image: url('../img/hero-new.jpg?v=3');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  overflow: hidden;
+}
+
+/* Hero Text Styling */
+.hero-bg h2 {
+  font-size: 1.875rem; /* text-3xl */
+  line-height: 1.3;
+  word-break: break-word;
+}
+
+.hero-bg p {
+  font-size: 1.125rem; /* text-lg */
+  line-height: 1.6;
+}
+
+/* Responsive for Mobile */
+@media (max-width: 768px) {
   .hero-bg {
-    background-image: url('../img/hero-new.jpg?v=2');
-    background-size: cover;
-    background-position: center;
+    padding-top: 4rem;
+    padding-bottom: 4rem;
   }
+
+  .hero-bg h2 {
+    font-size: 1.5rem; /* text-2xl */
+  }
+
+  .hero-bg p {
+    font-size: 1rem;
+  }
+}
